@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Payment Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+    <h1>Apple pay test page</h1>
+
+    <form id="paymentForm" action="/charge" method="post">
+
+        <!-- Other Form Data -->
+
+        <div id="applePayContainer">
+            <!-- Apple Pay iFrame content will go here. -->
+        </div>
+        <div id="applePayErrorContainer">
+            <!-- Any error messages will be inserted here. -->
+        </div>
+
+        <button>Submit Payment Form</button>
+
+    </form>
+
+{#    <script src="https://applepay.cdn-apple.com/jsapi/v1.1.0/apple-pay-sdk.js"></script>#}
+    <script src="https://www.usaepay.com/js/v2/pay.js"></script>
+
+    <script>
+
+        // instantiate client with public_key
+        let client = new usaepay.Client('_15DGhIEMpxCo9V2YsjarXd051cmrm7pu7EV9OuG7u');
+        // let client = new usaepay.Client('_vKhyLpFPGeNY5D4PpvmmBeH5FCzBsVH');
+        let applePayConfig = {
+            targetDiv: 'applePayContainer',
+            displayName: 'UpscriptHealth',
+            paymentRequest: {
+                total: {
+                    label: 'Total',
+                    amount: '1.00',
+                    type: 'final'
+                },
+                countryCode: 'US',
+                currencyCode: 'USD'
+            }
+            /*paymentRequest: {
+                lineItems: [
+                    {
+                        label: 'shipping',
+                        amount: '5.00',
+                        type: 'final'
+                    },
+                    {
+                        label: 'subtotal',
+                        amount: '54.99',
+                        type: 'final'
+                    },
+                    {
+                        label: 'tax',
+                        amount: '5.49',
+                        type: 'final'
+                    }
+                ],
+                total: {
+                    label: 'Capsule Corp.',
+                    amount: '60.48',
+                    type: 'final'
+                },
+                countryCode: 'US',
+                currencyCode: 'USD'
+            }
+            */
+        }
+        // Instantiate ApplePay Entry
+        let applePay = client.createApplePayEntry(applePayConfig);
+
+        if (window.ApplePaySession) {
+           // The Apple Pay JS API is available.
+            console.log("The Apple Pay JS API is available.") ;
+        }else {
+            console.log("The Apple Pay JS API is NOT available.") ;
+        }
+
+        // check to see if Apple Pay is available
+        applePay.checkCompatibility().then( res => {
+            // if so, add the Apple Pay button
+            applePay.addButton();
+        }).catch( err => {
+            // if not, hide the section it would have gone into
+            console.error('CATCH: ', err);
+            console.log("Not compatible")
+            document.getElementById('applePayContainer').style.display = 'none';
+        })
+
+        // listen for Apple Pay to be successfully completed
+        applePay.on('applePaySuccess', function () {
+            // once successfully completed, payment key is ready
+            client.getPaymentKey(applePay).then(result => {
+                handlePaymentKey(result);
+            }).catch(res => {
+                console.error('CATCH: ', res);
+            });
+        });
+
+        // listen for any Apple pay errors
+        applePay.on('applePayError', function () {
+            // Handle Errors
+            alert('applePayError') ;
+            console.log("error") ;
+        })
+
+        function handlePaymentKey(paymentKey) {
+            // Insert the payment key into the form so it gets submitted to the server
+            var form = document.getElementById('paymentForm');
+            var hiddenInput = document.createElement('input');
+            hiddenInput.setAttribute('type', 'hidden');
+            hiddenInput.setAttribute('name', 'payment_key');
+            hiddenInput.setAttribute('value', paymentKey);
+            form.appendChild(hiddenInput);
+
+            // Submit the form
+            form.submit();
+        }
+
+        // listen for the Apple Pay session to be cancelled
+        applePay.on('applePayCancelled', function() {
+            // do something
+            console.log("applePayCancelled")
+        });
+
+
+    </script>
+
+
+</body>
+</html>

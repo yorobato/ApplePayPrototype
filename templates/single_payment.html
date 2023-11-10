@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>My Website Checkout Page</h1>
+
+    <form id="paymentForm" action="/charge" method="post">
+
+        <!-- Other Form Data -->
+
+        <label for="paymentCardContainer">Credit/Debit Card</label>
+        <div id="paymentCardContainer">
+            <!-- PaymentCard iFrame content will go here. -->
+        </div>
+        <div id="paymentCardErrorContainer"role="alert">
+            <!-- Any error messages will be inserted here. -->
+        </div>
+
+        <button>Submit Payment Form</button>
+
+    </form>
+
+    <script>
+        // Instantiate Client with Public API Key
+        let client = new usaepay.Client('_vKhyLpFPGeNY5D4PpvmmBeH5FCzBsVH');
+        // Instantiate Payment Card Entry
+        let paymentCard = client.createPaymentCardEntry();
+
+        // listen for errors so that you can display error messages
+        paymentCard.addEventListener('error', errorMessage => {
+            let errorContainer = document.getElementById('paymentCardErrorContainer');
+            errorContainer.textContent = errorMessage;
+        });
+
+        // listen for your form to be submitted
+        let form = document.getElementById('paymentForm');
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            // create a payment key, returns a promise which will resolve in an error or the payment key
+            client.getPaymentKey(paymentCard).then(result => {
+            if (result.error) {
+              let errorContainer = document.getElementById('paymentCardErrorContainer');
+              errorContainer.textContent = result.error.message;
+            } else {
+              // do something with your payment key
+              tokenHandler(result);
+            }
+          }).catch( err => {
+                // catch errors
+          });
+        })
+    </script>
+</body>
+</html>
